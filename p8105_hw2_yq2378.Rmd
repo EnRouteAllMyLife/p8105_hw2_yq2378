@@ -172,6 +172,7 @@ After removing the invalid data,the average baseline age is around 65.61	and the
 
 Similarly, import the dataset, skip the first row, and replace "NA" with NAs. Since we already know that this dataset consists of many numeric variables, we use col_types to specify the data types. Afterward, use clean_names to standardize the column names. The dataset includes a primary key `student_id`, and the biomarker values are recorded at various time points, starting from `baseline`, progressing through `time_2`, `time_4`, `time_6`, and ending at `time_8`. By using the 'skim' function, we can gain insights into the distribution and characteristics of longitudinally observed biomarker values.
 
+Use `pivot_longer()` to transform the data from wide to long. Use `values_drop_na = TRUE` to drop NA. This make amyloid dataset much more like a dataset of longitudinally observed biomarker values. (But from my standpoint, this transformation make the data lose the unique key and kind of redundant. So I choose to use the original dataset instead of the long one. Hopeing this is acceptable. )
 ```{r amyloid}
 df_amyloid = read_csv("./dataset/mci_amyloid.csv", skip = 1, na = c(".", "NA", "") ,
                       col_types = cols(
@@ -182,7 +183,9 @@ df_amyloid = read_csv("./dataset/mci_amyloid.csv", skip = 1, na = c(".", "NA", "
                                        `Time 6` = col_double(),
                                        `Time 8` = col_double())) %>%
               janitor::clean_names() 
-skimr::skim(df_amyloid)              
+skimr::skim(df_amyloid) 
+
+df_amyloid %>% pivot_longer(cols = c("baseline",starts_with("time_")), names_to = "time_tag",values_drop_na = TRUE)
 ```
 
 ```{r output }

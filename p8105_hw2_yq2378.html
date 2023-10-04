@@ -643,6 +643,13 @@ are recorded at various time points, starting from
 <code>time_8</code>. By using the ‘skim’ function, we can gain insights
 into the distribution and characteristics of longitudinally observed
 biomarker values.</p>
+<p>Use <code>pivot_longer()</code> to transform the data from wide to
+long. Use <code>values_drop_na = TRUE</code> to drop NA. This make
+amyloid dataset much more like a dataset of longitudinally observed
+biomarker values. (But from my standpoint, this transformation make the
+data lose the unique key and kind of redundant. So I choose to use the
+original dataset instead of the long one. Hopeing this is acceptable.
+)</p>
 <pre class="r"><code>df_amyloid = read_csv(&quot;./dataset/mci_amyloid.csv&quot;, skip = 1, na = c(&quot;.&quot;, &quot;NA&quot;, &quot;&quot;) ,
                       col_types = cols(
                                        `Study ID` = col_integer(),
@@ -656,7 +663,7 @@ biomarker values.</p>
 ## e.g.:
 ##   dat &lt;- vroom(...)
 ##   problems(dat)</code></pre>
-<pre class="r"><code>skimr::skim(df_amyloid)              </code></pre>
+<pre class="r"><code>skimr::skim(df_amyloid) </code></pre>
 <table>
 <caption>Data summary</caption>
 <tbody>
@@ -805,15 +812,21 @@ biomarker values.</p>
 </tr>
 </tbody>
 </table>
-<p>Check whether some participants appear in only the baseline or
-amyloid datasets, and comment on your findings. Combine the demographic
-and biomarker datasets so that only participants who appear in both
-datasets are retained, and briefly describe the resulting dataset;
-export the result as a CSV to your data directory.</p>
-<p>After inner join, there is only 94 observations of 11 variables,
-meaning there are 3 participants got exclued from the filtered baseline
-dataset and 393 participants got exclued from the amyloid dataset.
-Indicating there might be lost to follow up cases.</p>
+<pre class="r"><code>df_amyloid %&gt;% pivot_longer(cols = c(&quot;baseline&quot;,starts_with(&quot;time_&quot;)), names_to = &quot;time_tag&quot;,values_drop_na = TRUE)</code></pre>
+<pre><code>## # A tibble: 2,263 × 3
+##    study_id time_tag value
+##       &lt;int&gt; &lt;chr&gt;    &lt;dbl&gt;
+##  1        1 baseline 0.111
+##  2        1 time_4   0.109
+##  3        1 time_6   0.105
+##  4        1 time_8   0.107
+##  5        2 baseline 0.107
+##  6        2 time_2   0.109
+##  7        2 time_4   0.109
+##  8        2 time_6   0.106
+##  9        2 time_8   0.107
+## 10        3 baseline 0.106
+## # ℹ 2,253 more rows</code></pre>
 <pre class="r"><code>df_mci = df_baseline %&gt;% inner_join(df_amyloid, by = c(&quot;id&quot; = &quot;study_id&quot;))
 head(df_mci)</code></pre>
 <pre><code>## # A tibble: 6 × 11
@@ -827,6 +840,10 @@ head(df_mci)</code></pre>
 ## 6     6        62.5 male          16 non_ca…         NA      0.112  0.113  0.111
 ## # ℹ 2 more variables: time_6 &lt;dbl&gt;, time_8 &lt;dbl&gt;</code></pre>
 <pre class="r"><code>write_csv(df_mci, file = &quot;./dataset/mci_result.csv&quot;)</code></pre>
+<p>After inner join, there is only 471 observations of 11 variables,
+meaning there are 8 participants got excluded from the filtered baseline
+dataset and 16 participants got excluded from the amyloid dataset.
+Indicating there might be lost to follow up cases.</p>
 </div>
 
 
