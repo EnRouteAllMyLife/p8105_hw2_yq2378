@@ -551,91 +551,52 @@ head(df_unemp)</code></pre>
 </div>
 <div id="problem-2" class="section level1">
 <h1>Problem 2</h1>
-<p>This problem uses the Mr. Trash Wheel dataset, available as an Excel
-file on the course website.</p>
-<p>Read and clean the Mr. Trash Wheel sheet:</p>
-<p>specify the sheet in the Excel file and to omit non-data entries
-(rows with notes / figures; columns containing notes) using arguments in
-read_excel use reasonable variable names omit rows that do not include
-dumpster-specific data The data include a column for the (approximate)
-number of homes powered. This calculation is described in the Homes
-powered note, but not applied to every row in the dataset. Update the
-data to include a new homes_powered variable based on this calculation.
-* Homes Powered - Each ton of trash equates to on average 500 kilowatts
-of electricity. An average household will use 30 kilowatts per day.
-Write a paragraph about these data; you are encouraged to use inline R.
-Be sure to note the number of observations in the resulting dataset, and
-give examples of key variables. For available data, what was the total
-weight of trash collected by Professor Trash Wheel? What was the total
-number of cigarette butts collected by Gwynnda in July of 2021?</p>
-<p>These data encompass information from three trash-collecting devices:
-Mr. Trash Wheel, Professor Trash Wheel, and Gwynnda. The combined
-dataset has 666 observations of 17 variables. It has time related
-variables like <code>data</code>, <code>month</code> and
-<code>year</code>. <code>weight_tons</code> shows the total weight of
-the trash. It also has detailed amount of all kinds of trash, like
-<code>cigarette_butt</code>,<code>glass_bottles</code>,
-<code>grocery_bags</code> etc.<code>trash_name</code> helps to
-distinguish which trash wheel is used.</p>
-<pre class="r"><code>df_mr_trash = read_excel(path = &quot;./dataset/202207 Trash Wheel Collection Data.xlsx&quot;,
+<pre class="r"><code>df_mr_trash = read_excel(path = &quot;./dataset/202309 Trash Wheel Collection Data.xlsx&quot;,
                       sheet = &quot;Mr. Trash Wheel&quot;,
                       skip = 0,
                       col_names = TRUE,
-                      range = &quot;A2:N549&quot;) %&gt;%
+                      range = &quot;A2:N586&quot;) %&gt;%
    janitor::clean_names() %&gt;%
   filter(!is.na(weight_tons)) %&gt;%  # omit rows that do not include dumpster-specific data
   mutate(homes_powered_new = weight_tons*500/30,
          trash_name = &quot;Mr. Trash Wheel&quot;)
-df_pro_trash = read_excel(path = &quot;./dataset/202207 Trash Wheel Collection Data.xlsx&quot;,
+df_pro_trash = read_excel(path = &quot;./dataset/202309 Trash Wheel Collection Data.xlsx&quot;,
                       sheet = &quot;Professor Trash Wheel&quot;,
                       skip = 0,
                       col_names = TRUE,
-                      range = &quot;A2:M96&quot;) %&gt;%
+                      range = &quot;A2:M108&quot;) %&gt;%
    janitor::clean_names() %&gt;%
    filter(!is.na(weight_tons)) %&gt;%
    mutate(homes_powered_new = weight_tons*500/30,
           trash_name = &quot;Professor Trash Wheel&quot;,
           year = as.character(year))
-df_cap_trash = read_excel(path = &quot;./dataset/202207 Trash Wheel Collection Data.xlsx&quot;,
+df_cap_trash = read_excel(path = &quot;./dataset/202309 Trash Wheel Collection Data.xlsx&quot;,
                       sheet = &quot;Captain Trash Wheel&quot;,
                       skip = 0,
                       col_names = TRUE,
-                      range = &quot;A2:K27&quot;) %&gt;%
+                      range = &quot;A2:K30&quot;) %&gt;%
    janitor::clean_names() %&gt;%
    filter(!is.na(weight_tons)) %&gt;%
    mutate(homes_powered_new = weight_tons*500/30,
           trash_name = &quot;Captain Trash Wheel&quot;,
           year = as.character(year))
 df_trash = bind_rows(df_mr_trash,df_pro_trash, df_cap_trash)</code></pre>
+<p>These data encompass information from three trash-collecting devices:
+Mr. Trash Wheel, Professor Trash Wheel, and Gwynnda. The combined
+dataset has 718 observations of 16 variables. It has time related
+variables like <code>data</code>, <code>month</code> and
+<code>year</code>. <code>weight_tons</code> shows the total weight of
+the trash. It also has detailed amount of all kinds of trash, like
+<code>cigarette_butt</code>,<code>glass_bottles</code>,
+<code>grocery_bags</code> etc.<code>trash_name</code> helps to
+distinguish which trash wheel is used.</p>
 <p>The total weight of trash collected by Professor Trash Wheel is
-190.12.<br />
+216.26.<br />
 The total number of cigarette butts collected by Gwynnda in July of 2021
 is 3200.</p>
-<pre class="r"><code>df_trash %&gt;% filter(trash_name == &quot;Professor Trash Wheel&quot;) %&gt;% summarise(sum(weight_tons))</code></pre>
-<pre><code>## # A tibble: 1 × 1
-##   `sum(weight_tons)`
-##                &lt;dbl&gt;
-## 1               190.</code></pre>
-<pre class="r"><code>df_trash %&gt;% filter(trash_name == &quot;Captain Trash Wheel&quot; &amp; year == &quot;2021&quot; &amp; month == &quot;July&quot;) %&gt;% summarise(sum(cigarette_butts))</code></pre>
-<pre><code>## # A tibble: 1 × 1
-##   `sum(cigarette_butts)`
-##                    &lt;dbl&gt;
-## 1                   3200</code></pre>
 </div>
 <div id="problem-3" class="section level1">
 <h1>Problem 3</h1>
-<p>We import the MCI_baseline dataset by using
-<code>read_csv</code>,skipping the first row for its the description and
-replacing all the “.”, “” “NA” if any to NA. Instead of using
-“col_types”, we directly encode <code>sex</code> and <code>apoe4</code>
-to factors, which is intuitive and easy to calculate. The number of
-total participants is 483. 97 participants have developed MCI. Before
-removing the data with NAs in <code>age_at_onset</code>,the average
-baseline age is around 65.05 and the proportion of women in the study
-are APOE4 carriers is around 95.65%. After removing the data with NAs in
-<code>age_at_onset</code>,the average baseline age is around 65.61 and
-the proportion of women in the study are APOE4 carriers is around
-73.20%.</p>
 <pre class="r"><code>df_baseline = read_csv(&quot;./dataset/MCI_baseline.csv&quot;, skip = 1, na = c(&quot;.&quot;, &quot;NA&quot;, &quot;&quot;), show_col_types = FALSE) %&gt;%
               janitor::clean_names() %&gt;%
               mutate(sex = case_match(sex, 0 ~ &quot;female&quot;, 1 ~ &quot;male&quot;),
@@ -645,21 +606,32 @@ the proportion of women in the study are APOE4 carriers is around
           
 df_baseline %&gt;%  summarise(cnt = n(), 
                            age_avg = mean(current_age),
-                           proportion = sum(abs(as.numeric(sex )-1)* as.numeric(apoe4))/n())</code></pre>
+                           proportion = sum(abs(as.numeric(sex )-2)* abs(as.numeric(apoe4)-2))/sum(abs(as.numeric(sex )-2)))</code></pre>
 <pre><code>## # A tibble: 1 × 3
 ##     cnt age_avg proportion
 ##   &lt;int&gt;   &lt;dbl&gt;      &lt;dbl&gt;
-## 1   483    65.0      0.957</code></pre>
-<pre class="r"><code>df_baseline = df_baseline %&gt;%  filter(!is.na(age_at_onset)) 
-
-
+## 1   483    65.0      0.299</code></pre>
+<p>We import the MCI_baseline dataset by using
+<code>read_csv</code>,skipping the first row for its the description and
+replacing all the “.”, “” “NA” if any to NA. Instead of using
+“col_types”, we directly encode <code>sex</code> and <code>apoe4</code>
+to factors, which is intuitive and easy to calculate. The factor mapping
+is {<code>sex</code>: female: 1, male:0}, {<code>apoe4</code>: carrier:
+1, non_carrier: 2}. The number of total participants is 483, 97
+participants have developed MCI, among which 4 have developed MCI before
+the study and should be excluded.</p>
+<pre class="r"><code>#df_baseline = df_baseline %&gt;%  filter(!is.na(age_at_onset) &amp; age_at_onset&gt;current_age) 
+df_baseline = df_baseline %&gt;%  filter(age_at_onset&gt;current_age | is.na(age_at_onset)) 
 df_baseline %&gt;% summarise(mci_cnt = n(), 
-                           age_avg = mean(current_age),
-                           proportion = sum(abs(as.numeric(sex )-1)* as.numeric(apoe4))/n())</code></pre>
+                          age_avg = mean(current_age),
+                          proportion = sum(abs(as.numeric(sex )-2)* abs(as.numeric(apoe4)-2))/sum(abs(as.numeric(sex )-2)))</code></pre>
 <pre><code>## # A tibble: 1 × 3
 ##   mci_cnt age_avg proportion
 ##     &lt;int&gt;   &lt;dbl&gt;      &lt;dbl&gt;
-## 1      97    65.6      0.732</code></pre>
+## 1     479    65.0        0.3</code></pre>
+<p>After removing the invalid data,the average baseline age is around
+65.61 and the proportion of women in the study are APOE4 carriers is
+around 30.00%.</p>
 <p>Similarly, import the dataset, skip the first row, and replace “NA”
 with NAs. Since we already know that this dataset consists of many
 numeric variables, we use col_types to specify the data types.
@@ -847,12 +819,12 @@ head(df_mci)</code></pre>
 <pre><code>## # A tibble: 6 × 11
 ##      id current_age sex    education apoe4   age_at_onset baseline time_2 time_4
 ##   &lt;dbl&gt;       &lt;dbl&gt; &lt;fct&gt;      &lt;dbl&gt; &lt;fct&gt;          &lt;dbl&gt;    &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;
-## 1     3        62.5 male          16 carrier         66.8    0.106  0.109  0.106
-## 2     5        66   male          16 non_ca…         68.7    0.108  0.112  0.115
-## 3     7        66.5 male          18 non_ca…         74      0.112 NA      0.104
-## 4    13        63.1 male          12 carrier         69      0.110  0.109  0.108
-## 5    18        67.8 male          16 non_ca…         69.8    0.114  0.107  0.111
-## 6    22        67.3 female        20 carrier         74.6    0.109 NA      0.108
+## 1     1        63.1 female        16 carrier         NA      0.111 NA      0.109
+## 2     2        65.6 female        20 carrier         NA      0.107  0.109  0.109
+## 3     3        62.5 male          16 carrier         66.8    0.106  0.109  0.106
+## 4     4        69.8 female        16 non_ca…         NA      0.109  0.109  0.111
+## 5     5        66   male          16 non_ca…         68.7    0.108  0.112  0.115
+## 6     6        62.5 male          16 non_ca…         NA      0.112  0.113  0.111
 ## # ℹ 2 more variables: time_6 &lt;dbl&gt;, time_8 &lt;dbl&gt;</code></pre>
 <pre class="r"><code>write_csv(df_mci, file = &quot;./dataset/mci_result.csv&quot;)</code></pre>
 </div>
