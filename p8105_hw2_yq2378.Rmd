@@ -1,0 +1,211 @@
+---
+title: "p8105_hw2_yq2378"
+author: "Qi Yumeng"
+date: "2023-09-29"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load lib}
+library("tidyverse")
+library("lubridate")
+library("readxl")
+```
+
+# Problem 1
+
+The file “pols-month” contains 822 observations of 9 variables related to the number of national politicians who are democratic or republican at any given time. `president` is the indicator of whether the president was republican or democratic on the associated date, it's originate from `prez_dem` and `prez_gop`. `gov_gop`, `sen_gop` and `rep_gop` respectively stands for the number of republican governors,senators and representatives on the associated date. `gov_dem`, `sen_dem` and `rep_dem` stands for the similar meanings for democratic. The records start from January,1947 to June, 2015.  
+The file “snp” contains 787 observations of 2 variables related to Standard & Poor’s stock market index (S&P), often used as a representative measure of stock market as a whole. `close` indicates the closing values of the S&P stock index on the associated date. The records start from January,1950 to July, 2015.   
+The file “unemployment” contains 68 observations of 13 variables describing percentage of unemployment in certain month of the associated year, see `unemployment_rate`. The records start from January,1948 to December, 2015.   
+
+The merged file is joined by `year` and `month`. It contains 822 observations of 11 variables. The records start from January,1947 to June, 2015.  
+
+
+```{r df_pols}
+df_pols = read_csv("./dataset/pols-month.csv")
+head(df_pols)
+df_pols = df_pols %>%
+  separate(mon, into = c("year", "month", "day"), sep = "-") %>%
+  mutate(month = case_when(
+    month == "01" ~ "January",
+    month == "02" ~ "February",
+    month == "03" ~ "March",
+    month == "04" ~ "April",
+    month == "05" ~ "May",
+    month == "06" ~ "June",
+    month == "07" ~ "July",
+    month == "08" ~ "August",
+    month == "09" ~ "September",
+    month == "10" ~ "October",
+    month == "11" ~ "November",
+    month == "12" ~ "December"
+  )) %>%
+  arrange(as.numeric(year),as.numeric(month))%>%
+  mutate(president = case_when(
+    prez_dem == 1 ~ "dem",
+    prez_gop != 0 ~ "gop"
+  )) %>%
+  select(-day, -prez_dem,-prez_gop) 
+head(df_pols)
+```
+
+
+
+```{r df_snp}
+df_snp = read_csv("./dataset/snp.csv")
+head(df_snp)
+# notcie 	6/2/58 should be 1958 rather than 2058
+df_snp = df_snp %>%
+  separate(date, into = c("month", "day","year"), sep = "/") %>%
+  mutate(year = ifelse(as.numeric(year) >= 50, 1900 + as.numeric(year) , 2000 + as.numeric(year)))%>%
+  select(-day) %>%
+  select(year, month, close)%>%
+  arrange(as.numeric(year),as.numeric(month)) %>%
+  mutate(month = case_when(
+    month == "1" ~ "January",
+    month == "2" ~ "February",
+    month == "3" ~ "March",
+    month == "4" ~ "April",
+    month == "5" ~ "May",
+    month == "6" ~ "June",
+    month == "7" ~ "July",
+    month == "8" ~ "August",
+    month == "9" ~ "September",
+    month == "10" ~ "October",
+    month == "11" ~ "November",
+    month == "12" ~ "December"
+  ),
+  year = as.character(year))  
+head(df_snp)
+```
+
+```{r df_unemp}
+df_unemp = read_csv("./dataset/unemployment.csv")
+head(df_unemp)
+# Create a data frame with month abbreviation and full name mapping
+month_mapping <- data.frame(
+  MonthAbbreviation = month.abb,
+  MonthFullName = month.name,
+  stringsAsFactors = FALSE
+)
+
+df_unemp = df_unemp %>% 
+  pivot_longer(Jan:Dec,names_to = "month_abb", values_to = "unemployment_rate") %>%
+  left_join(month_mapping, by = c("month_abb" = "MonthAbbreviation")) %>% 
+  select(-month_abb) %>%
+  rename(year = Year, month = MonthFullName) %>% 
+  select(year, month, unemployment_rate)%>% 
+  mutate(year = as.character(year))
+head(df_unemp)
+df_final = df_pols %>% left_join(df_snp,by = c('year','month')) %>% left_join(df_unemp,by = c('year','month'))
+```
+# Problem 2
+
+This problem uses the Mr. Trash Wheel dataset, available as an Excel file on the course website.
+
+Read and clean the Mr. Trash Wheel sheet:
+
+specify the sheet in the Excel file and to omit non-data entries (rows with notes / figures; columns containing notes) using arguments in read_excel
+use reasonable variable names
+omit rows that do not include dumpster-specific data
+The data include a column for the (approximate) number of homes powered. This calculation is described in the Homes powered note, but not applied to every row in the dataset. Update the data to include a new homes_powered variable based on this calculation.
+* Homes Powered - Each ton of trash equates to on average 500 kilowatts of electricity.  An average household will use 30 kilowatts per day.
+Write a paragraph about these data; you are encouraged to use inline R. Be sure to note the number of observations in the resulting dataset, and give examples of key variables. For available data, what was the total weight of trash collected by Professor Trash Wheel? What was the total number of cigarette butts collected by Gwynnda in July of 2021?
+
+These data encompass information from three trash-collecting devices: Mr. Trash Wheel, Professor Trash Wheel, and Gwynnda. The combined dataset has 666 observations of 17 variables. It has time related variables like `data`, `month` and `year`. `weight_tons` shows the total weight of the trash. It also has detailed amount of all kinds of trash, like `cigarette_butt`,`glass_bottles`, `grocery_bags` etc.`trash_name` helps to distinguish which trash wheel is used. 
+
+```{r TrashWheel}
+df_mr_trash = read_excel(path = "./dataset/202207 Trash Wheel Collection Data.xlsx",
+                      sheet = "Mr. Trash Wheel",
+                      skip = 0,
+                      col_names = TRUE,
+                      range = "A2:N549") %>%
+   janitor::clean_names() %>%
+  filter(!is.na(weight_tons)) %>%  # omit rows that do not include dumpster-specific data
+  mutate(homes_powered_new = weight_tons*500/30,
+         trash_name = "Mr. Trash Wheel")
+df_pro_trash = read_excel(path = "./dataset/202207 Trash Wheel Collection Data.xlsx",
+                      sheet = "Professor Trash Wheel",
+                      skip = 0,
+                      col_names = TRUE,
+                      range = "A2:M96") %>%
+   janitor::clean_names() %>%
+   filter(!is.na(weight_tons)) %>%
+   mutate(homes_powered_new = weight_tons*500/30,
+          trash_name = "Professor Trash Wheel",
+          year = as.character(year))
+df_cap_trash = read_excel(path = "./dataset/202207 Trash Wheel Collection Data.xlsx",
+                      sheet = "Captain Trash Wheel",
+                      skip = 0,
+                      col_names = TRUE,
+                      range = "A2:K27") %>%
+   janitor::clean_names() %>%
+   filter(!is.na(weight_tons)) %>%
+   mutate(homes_powered_new = weight_tons*500/30,
+          trash_name = "Captain Trash Wheel",
+          year = as.character(year))
+df_trash = bind_rows(df_mr_trash,df_pro_trash, df_cap_trash)
+```
+The total weight of trash collected by Professor Trash Wheel is 190.12.    
+The total number of cigarette butts collected by Gwynnda in July of 2021 is 3200.
+
+```{r cal}
+df_trash %>% filter(trash_name == "Professor Trash Wheel") %>% summarise(sum(weight_tons))
+df_trash %>% filter(trash_name == "Captain Trash Wheel" & year == "2021" & month == "July") %>% summarise(sum(cigarette_butts))
+```
+
+
+# Problem 3
+
+
+
+We import the MCI_baseline dataset by using `read_csv`,skipping the first row for its the description and replacing all the ".", "" "NA" if any to NA. Instead of using "col_types", we directly encode `sex` and `apoe4` to factors, which is intuitive and easy to calculate. The  number of total participants is 483. 97 participants have developed MCI. Before removing the data with NAs in `age_at_onset`,the average baseline age is around 65.05	and the proportion of women in the study are APOE4 carriers is around 95.65%. After removing the data with NAs in `age_at_onset`,the average baseline age is around 65.61	and the proportion of women in the study are APOE4 carriers is around 73.20%.
+
+```{r baseline}
+df_baseline = read_csv("./dataset/MCI_baseline.csv", skip = 1, na = c(".", "NA", ""), show_col_types = FALSE) %>%
+              janitor::clean_names() %>%
+              mutate(sex = case_match(sex, 0 ~ "female", 1 ~ "male"),
+                     sex = as.factor(sex),
+                     apoe4 = case_match(apoe4, 0 ~ "non_carrier", 1~"carrier"),
+                     apoe4 = as.factor(apoe4))  # remove no MCI at baseline
+          
+df_baseline %>%  summarise(cnt = n(), 
+                           age_avg = mean(current_age),
+                           proportion = sum(abs(as.numeric(sex )-1)* as.numeric(apoe4))/n())
+
+df_baseline = df_baseline %>%  filter(!is.na(age_at_onset)) 
+
+
+df_baseline %>% summarise(mci_cnt = n(), 
+                           age_avg = mean(current_age),
+                           proportion = sum(abs(as.numeric(sex )-1)* as.numeric(apoe4))/n())
+
+```
+
+Similarly, import the dataset, skip the first row, and replace "NA" with NAs. Since we already know that this dataset consists of many numeric variables, we use col_types to specify the data types. Afterward, use clean_names to standardize the column names. The dataset includes a primary key `student_id`, and the biomarker values are recorded at various time points, starting from `baseline`, progressing through `time_2`, `time_4`, `time_6`, and ending at `time_8`. By using the 'skim' function, we can gain insights into the distribution and characteristics of longitudinally observed biomarker values.
+
+```{r amyloid}
+df_amyloid = read_csv("./dataset/mci_amyloid.csv", skip = 1, na = c(".", "NA", "") ,
+                      col_types = cols(
+                                       `Study ID` = col_integer(),
+                                        Baseline = col_double(),
+                                       `Time 2` = col_double(),
+                                       `Time 4` = col_double(),
+                                       `Time 6` = col_double(),
+                                       `Time 8` = col_double())) %>%
+              janitor::clean_names() 
+skimr::skim(df_amyloid)              
+```
+Check whether some participants appear in only the baseline or amyloid datasets, and comment on your findings. Combine the demographic and biomarker datasets so that only participants who appear in both datasets are retained, and briefly describe the resulting dataset; export the result as a CSV to your data directory.
+
+
+After inner join, there is only 94 observations of 11 variables, meaning there are 3 participants got exclued from the filtered baseline dataset and 393 participants got exclued from the amyloid dataset. Indicating there might be lost to follow up cases. 
+
+```{r output }
+df_mci = df_baseline %>% inner_join(df_amyloid, by = c("id" = "study_id"))
+head(df_mci)
+write_csv(df_mci, file = "./dataset/mci_result.csv")
+```
