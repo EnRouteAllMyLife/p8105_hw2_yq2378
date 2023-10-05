@@ -53,7 +53,6 @@ head(df_pols)
 ```
 
 
-
 ```{r df_snp}
 df_snp = read_csv("./dataset/snp.csv")
 head(df_snp)
@@ -124,24 +123,23 @@ df_pro_trash = read_excel(path = "./dataset/202309 Trash Wheel Collection Data.x
    mutate(homes_powered_new = weight_tons*500/30,
           trash_name = "Professor Trash Wheel",
           year = as.character(year))
-df_cap_trash = read_excel(path = "./dataset/202309 Trash Wheel Collection Data.xlsx",
-                      sheet = "Captain Trash Wheel",
+df_gwynnda_trash = read_excel(path = "./dataset/202309 Trash Wheel Collection Data.xlsx",
+                      sheet = "Gwynnda Trash Wheel",
                       skip = 0,
                       col_names = TRUE,
-                      range = "A2:K30") %>%
+                      range = "A2:L157") %>%
    janitor::clean_names() %>%
    filter(!is.na(weight_tons)) %>%
    mutate(homes_powered_new = weight_tons*500/30,
-          trash_name = "Captain Trash Wheel",
+          trash_name = "Gwynnda Trash Wheel",
           year = as.character(year))
-df_trash = bind_rows(df_mr_trash,df_pro_trash, df_cap_trash)
+df_trash = bind_rows(df_mr_trash,df_pro_trash, df_gwynnda_trash)
 ```
 
 These data encompass information from three trash-collecting devices: Mr. Trash Wheel, Professor Trash Wheel, and Gwynnda. The combined dataset has `r nrow(df_trash)` observations of `r ncol(df_trash)` variables. It has time related variables like `data`, `month` and `year`. `weight_tons` shows the total weight of the trash. It also has detailed amount of all kinds of trash, like `cigarette_butt`,`glass_bottles`, `grocery_bags` etc.`trash_name` helps to distinguish which trash wheel is used.
 
 The total weight of trash collected by Professor Trash Wheel is `r df_trash %>% filter(trash_name == "Professor Trash Wheel") %>% summarise(sum(weight_tons))`.     
-The total number of cigarette butts collected by Gwynnda in July of 2021 is `r df_trash %>% filter(trash_name == "Captain Trash Wheel" & year == "2021" & month == "July") %>% summarise(sum(cigarette_butts))`.
-
+The total number of cigarette butts collected by Gwynnda in July of 2021 is `r df_trash %>% filter(trash_name == "Gwynnda Trash Wheel" & year == "2021" & month == "July") %>% summarise(sum(cigarette_butts))`.
 
 # Problem 3
 
@@ -158,7 +156,7 @@ df_baseline %>%  summarise(cnt = n(),
                            proportion = sum(abs(as.numeric(sex )-2)* abs(as.numeric(apoe4)-2))/sum(abs(as.numeric(sex )-2)))
 ```
 
-We import the MCI_baseline dataset by using `read_csv`,skipping the first row for its the description and replacing all the ".", "" "NA" if any to NA. Instead of using "col_types", we directly encode `sex` and `apoe4` to factors, which is intuitive and easy to calculate. The factor mapping is {`sex`: female: 1, male:0}, {`apoe4`: carrier: 1, non_carrier: 2}. The number of total participants is `r nrow(df_baseline)`, `r sum(!is.na(df_baseline$age_at_onset))` participants have developed MCI, among which `r sum(df_baseline$age_at_onset <= df_baseline$current_age, na.rm = TRUE)` have developed MCI before the study and should be excluded.
+We import the MCI_baseline dataset by using `read_csv`,skipping the first row for its the description and replacing all the ".", "" "NA" if any to NA. Instead of using "col_types", we directly encode `sex` and `apoe4` to factors, which is intuitive and easy to calculate. The factor mapping is {`sex`: female: 1, male:0}, {`apoe4`: carrier: 1, non_carrier: 2}. The number of total participants is `r nrow(df_baseline)`, `r sum(!is.na(df_baseline$age_at_onset))` participants have developed MCI, among which `r sum(df_baseline$age_at_onset <= df_baseline$current_age, na.rm = TRUE)` have developed MCI before the study and should be excluded. This suggests `r sum(!is.na(df_baseline$age_at_onset)) - sum(df_baseline$age_at_onset <= df_baseline$current_age, na.rm = TRUE)` people should be enrolled in the study.
 
 ```{r valid}
 #df_baseline = df_baseline %>%  filter(!is.na(age_at_onset) & age_at_onset>current_age) 
@@ -172,7 +170,7 @@ After removing the invalid data,the average baseline age is around 65.61	and the
 
 Similarly, import the dataset, skip the first row, and replace "NA" with NAs. Since we already know that this dataset consists of many numeric variables, we use col_types to specify the data types. Afterward, use clean_names to standardize the column names. The dataset includes a primary key `student_id`, and the biomarker values are recorded at various time points, starting from `baseline`, progressing through `time_2`, `time_4`, `time_6`, and ending at `time_8`. By using the 'skim' function, we can gain insights into the distribution and characteristics of longitudinally observed biomarker values.
 
-Use `pivot_longer()` to transform the data from wide to long. Use `values_drop_na = TRUE` to drop NA. This make amyloid dataset much more like a dataset of longitudinally observed biomarker values. (But from my standpoint, this transformation make the data lose the unique key and kind of redundant. So I choose to use the original dataset instead of the long one. Hopeing this is acceptable. )
+I also try to use `pivot_longer()` to transform the data from wide to long. Use `values_drop_na = TRUE` to drop NA. This make amyloid dataset much more like a dataset of longitudinally observed biomarker values. (But from my standpoint, this transformation make the data lose the unique key and kind of redundant. So I choose to use the original dataset instead of the long one. Hopeing this is acceptable. )
 ```{r amyloid}
 df_amyloid = read_csv("./dataset/mci_amyloid.csv", skip = 1, na = c(".", "NA", "") ,
                       col_types = cols(

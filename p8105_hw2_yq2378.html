@@ -570,20 +570,20 @@ df_pro_trash = read_excel(path = &quot;./dataset/202309 Trash Wheel Collection D
    mutate(homes_powered_new = weight_tons*500/30,
           trash_name = &quot;Professor Trash Wheel&quot;,
           year = as.character(year))
-df_cap_trash = read_excel(path = &quot;./dataset/202309 Trash Wheel Collection Data.xlsx&quot;,
-                      sheet = &quot;Captain Trash Wheel&quot;,
+df_gwynnda_trash = read_excel(path = &quot;./dataset/202309 Trash Wheel Collection Data.xlsx&quot;,
+                      sheet = &quot;Gwynnda Trash Wheel&quot;,
                       skip = 0,
                       col_names = TRUE,
-                      range = &quot;A2:K30&quot;) %&gt;%
+                      range = &quot;A2:L157&quot;) %&gt;%
    janitor::clean_names() %&gt;%
    filter(!is.na(weight_tons)) %&gt;%
    mutate(homes_powered_new = weight_tons*500/30,
-          trash_name = &quot;Captain Trash Wheel&quot;,
+          trash_name = &quot;Gwynnda Trash Wheel&quot;,
           year = as.character(year))
-df_trash = bind_rows(df_mr_trash,df_pro_trash, df_cap_trash)</code></pre>
+df_trash = bind_rows(df_mr_trash,df_pro_trash, df_gwynnda_trash)</code></pre>
 <p>These data encompass information from three trash-collecting devices:
 Mr. Trash Wheel, Professor Trash Wheel, and Gwynnda. The combined
-dataset has 718 observations of 16 variables. It has time related
+dataset has 845 observations of 16 variables. It has time related
 variables like <code>data</code>, <code>month</code> and
 <code>year</code>. <code>weight_tons</code> shows the total weight of
 the trash. It also has detailed amount of all kinds of trash, like
@@ -593,7 +593,7 @@ distinguish which trash wheel is used.</p>
 <p>The total weight of trash collected by Professor Trash Wheel is
 216.26.<br />
 The total number of cigarette butts collected by Gwynnda in July of 2021
-is 3200.</p>
+is 1.63^{4}.</p>
 </div>
 <div id="problem-3" class="section level1">
 <h1>Problem 3</h1>
@@ -619,7 +619,8 @@ to factors, which is intuitive and easy to calculate. The factor mapping
 is {<code>sex</code>: female: 1, male:0}, {<code>apoe4</code>: carrier:
 1, non_carrier: 2}. The number of total participants is 483, 97
 participants have developed MCI, among which 4 have developed MCI before
-the study and should be excluded.</p>
+the study and should be excluded. This suggests 93 people should be
+enrolled in the study.</p>
 <pre class="r"><code>#df_baseline = df_baseline %&gt;%  filter(!is.na(age_at_onset) &amp; age_at_onset&gt;current_age) 
 df_baseline = df_baseline %&gt;%  filter(age_at_onset&gt;current_age | is.na(age_at_onset)) 
 df_baseline %&gt;% summarise(mci_cnt = n(), 
@@ -643,13 +644,13 @@ are recorded at various time points, starting from
 <code>time_8</code>. By using the ‘skim’ function, we can gain insights
 into the distribution and characteristics of longitudinally observed
 biomarker values.</p>
-<p>Use <code>pivot_longer()</code> to transform the data from wide to
-long. Use <code>values_drop_na = TRUE</code> to drop NA. This make
-amyloid dataset much more like a dataset of longitudinally observed
-biomarker values. (But from my standpoint, this transformation make the
-data lose the unique key and kind of redundant. So I choose to use the
-original dataset instead of the long one. Hopeing this is acceptable.
-)</p>
+<p>I also try to use <code>pivot_longer()</code> to transform the data
+from wide to long. Use <code>values_drop_na = TRUE</code> to drop NA.
+This make amyloid dataset much more like a dataset of longitudinally
+observed biomarker values. (But from my standpoint, this transformation
+make the data lose the unique key and kind of redundant. So I choose to
+use the original dataset instead of the long one. Hopeing this is
+acceptable. )</p>
 <pre class="r"><code>df_amyloid = read_csv(&quot;./dataset/mci_amyloid.csv&quot;, skip = 1, na = c(&quot;.&quot;, &quot;NA&quot;, &quot;&quot;) ,
                       col_types = cols(
                                        `Study ID` = col_integer(),
